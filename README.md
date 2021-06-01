@@ -43,7 +43,7 @@ To re-produce synthethic experiments, do the following:
 
 To re-produce the experiments on this real-world dataset, do the following:
 
-The data is found in */data/fivecities/*, but can also be downloaded from [https://archive.ics.uci.edu/ml/datasets/PM2.5+Data+of+Five+Chinese+Cities](here).
+The data is found in */data/fivecities/*, but can also be downloaded from [here](https://archive.ics.uci.edu/ml/datasets/PM2.5+Data+of+Five+Chinese+Cities).
 
 
 
