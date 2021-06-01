@@ -5,7 +5,7 @@
 
 This repository is the official implementation of [Long-term Prediction with Privileged Time Series in Linear Dynamical Systems](). 
 
-###To-do list
+### To-do list
 - [ ] Create a requirements.txt file
 - [x] Add a figure to describe the problem setup 
 - [ ] Add executable experiment for synthetic
