@@ -89,17 +89,17 @@ class StatLUPTS(base.Model):
 
 
 
-class LogisticLStatLUPTS(StatLUPTS):
+class LogisticStatLUPTS(StatLUPTS):
     """
         StatLUPTS for classification.
         Logistic regressiona at the step X_T -> Y
     """
         
-    def __init__(self, cv_search = False, folds = 5, args={}, model_args={}, logistic_args={}):
+    def __init__(self, cv_search = False, folds = 5, random_state = None, args={}, model_args={}, logistic_args={}):
 
         super().__init__(args=args, model_args=model_args)
         if cv_search:
-            self.regression_model = LogisticRegressionCV(solver='liblinear', n_jobs=-1, max_iter=1000, scoring='roc_auc', cv=folds)
+            self.regression_model = LogisticRegressionCV(solver='liblinear', n_jobs=-1, max_iter=1000, scoring='roc_auc', cv=folds, random_state=random_state)
         else:    
             self.regression_model = LogisticRegression(**logistic_args)
 
@@ -198,7 +198,7 @@ class LUPTS(StatLUPTS):
 
 class LogisticLUPTS(LUPTS):
 
-    def __init__(self, cv_search=False, folds = 5, args={}, model_args={}, logistic_args={}):
+    def __init__(self, cv_search=False, folds = 5, random_state = None, args={}, model_args={}, logistic_args={}):
                 
         """
         Non-stationary LUPTS for classification.
@@ -207,7 +207,7 @@ class LogisticLUPTS(LUPTS):
         
         super().__init__(args=args, model_args=model_args)
         if cv_search:
-            self.regression_model = LogisticRegressionCV(solver='liblinear', n_jobs=-1, max_iter=1000, scoring='roc_auc', cv = folds)
+            self.regression_model = LogisticRegressionCV(solver='liblinear', n_jobs=-1, max_iter=1000, scoring='roc_auc', cv = folds, random_state=random_state)
         else:    
             self.regression_model = LogisticRegression(**logistic_args)
 

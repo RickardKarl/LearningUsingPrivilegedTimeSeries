@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-
 import numpy as np
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score, roc_auc_score
@@ -11,10 +10,7 @@ from sklearn.model_selection import RepeatedKFold
 from sklearn.impute import SimpleImputer
 import functools
 import pandas as pd
-import sys
 import math
-
-sys.path.append('..')
 
 from ..model.lupts import LUPTS, StatLUPTS, LogisticLUPTS, LogisticStatLUPTS
 from ..model.baseline import Baseline, LogisticBaseline
@@ -35,10 +31,9 @@ cols_categorical = ['PTGENDER', 'APOE4']
 
 
 
-def quickADNI(set_path, task, priv_points, nan_threshold, seed):
+def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
 
-    task = 'MMSE'
-
+   
     if task == 'MCIAD' or task == 'AD':
         target = 'AD'
     elif task == 'CNMCI':

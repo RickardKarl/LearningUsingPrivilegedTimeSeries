@@ -56,10 +56,10 @@ class LogisticBaseline(base.Model):
         Logistic  regression model using the first time step in X as predictor to estimate outcome Y
     """
 
-    def __init__(self, cv_search = False, folds = 5, logistic_args={}):
+    def __init__(self, cv_search = False, folds = 5, random_state = None, logistic_args={}):
 
         if cv_search:
-            self.regression_model = LogisticRegressionCV(solver='liblinear', n_jobs=-1, max_iter=1000, scoring='roc_auc', cv=folds)
+            self.regression_model = LogisticRegressionCV(solver='liblinear', n_jobs=-1, max_iter=1000, scoring='roc_auc', cv=folds, random_state=random_state)
         else:
             self.regression_model = LogisticRegression(**logistic_args)
     
