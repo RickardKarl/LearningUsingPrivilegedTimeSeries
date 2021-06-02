@@ -1,10 +1,26 @@
 
-from synthethic import base
 
 import numpy as np
 import functools
-from synthethic import base
+from .. import base
 
+
+# A wrapper class for a numpy implemented distribution
+class Distribution(base.Data):
+    
+    # distribution = {'dist' : np_function_handle,
+    #         'dist_params' : [params1, params2, ...]
+    #        }
+    def __init__(self, distribution, sample_dim):
+        self.distribution = distribution
+        self.sample_dim = sample_dim
+    
+    def sample(self, shape):
+        return self.distribution['dist'](*self.distribution['dist_params'], shape)
+    
+    #Does the distribution return scalar or vector.
+    def dim(self):
+        return self.sample_dim
 
 
 class EasyA(base.ParamGen):
@@ -162,19 +178,3 @@ class ProtSystem(base.Data):
         pass
 
 
-# A wrapper class for a numpy implemented distribution
-class Distribution(base.Data):
-    
-    # distribution = {'dist' : np_function_handle,
-    #         'dist_params' : [params1, params2, ...]
-    #        }
-    def __init__(self, distribution, sample_dim):
-        self.distribution = distribution
-        self.sample_dim = sample_dim
-    
-    def sample(self, shape):
-        return self.distribution['dist'](*self.distribution['dist_params'], shape)
-    
-    #Does the distribution return scalar or vector.
-    def dim(self):
-        return self.sample_dim

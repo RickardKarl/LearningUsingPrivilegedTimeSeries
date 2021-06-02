@@ -1,6 +1,5 @@
 
 from .. import base
-from ..plot import plot_trajectory_from_data
 from . import modelutils
 
 import numpy as np

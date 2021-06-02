@@ -1,10 +1,12 @@
 
-from .data.input import base
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np 
 
-def plot_system(system : base.Data, seqLength : int, excludeY=True):
+from .base import Data
+
+
+def plot_system(system : Data, seqLength : int, excludeY=True):
     """
         Plots one roll-out of the given system and seqLength
     """

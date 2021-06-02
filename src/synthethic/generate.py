@@ -1,6 +1,8 @@
 import numpy as np
 
-from synthethic.system import EasyA, EasyBeta, ProtSystem, Distribution
+from ..base import Data
+from .system import EasyA, EasyBeta, ProtSystem, Distribution
+
 
 def create_default_system(dim = 25,
                         seq_length = 10, # Not necessaru if Stationary True
@@ -15,7 +17,7 @@ def create_default_system(dim = 25,
                         beta_scale = 0.2,
                         beta2_scale = None, # If not None, then we will break Markov assumption.
                         seed = None,
-                        stationary = False) -> base.Data:
+                        stationary = False) -> Data:
     """
     Generates a Markov-Gaussian-linear dynamical system with default configurements
     """
