@@ -6,10 +6,10 @@
 This repository is the official implementation of [Long-term Prediction with Privileged Time Series in Linear Dynamical Systems](). 
 
 ### To-do list
-- [ ] Create a requirements.txt file
+- [x] Create a requirements.txt file
 - [x] Add a figure to describe the problem setup 
-- [ ] Add executable experiment for synthetic
-- [ ] Add executable experiment + data (link or dataset) for FC
+- [x] Add executable experiment for synthetic
+- [x] Add executable experiment + data (link or dataset) for FC
 - [ ] Add code for ADNI
 - [ ] Add code for MM
 - [ ] Add some main results in README.md
@@ -35,21 +35,19 @@ pip install -r requirements.txt
 
 To re-produce synthethic experiments, do the following:
 
-
->📋  Describe how to train the models, with example commands on how to train the models in your paper, including the full training procedure and appropriate hyperparameters.
+Run the all cells in /notebooks/synthetic.ipynb
 
 ### Forecasting Air Quality
 
 
-To re-produce the experiments on this real-world dataset, do the following:
+Run the all cells in /notebooks/fivecities.ipynb
 
 The data is found in */data/fivecities/*, but can also be downloaded from [here](https://archive.ics.uci.edu/ml/datasets/PM2.5+Data+of+Five+Chinese+Cities).
-
-
 
 ### Modeling Progression of Chronic Disease
 
 **Note**: For the Alzheimer’s and Multiple myeloma progression modeling tasks, the data is not publicly available, but the code which produced the results is still found in this repository. 
+
 
 ## Results
 

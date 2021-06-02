@@ -42,9 +42,7 @@ class FiveCities():
         'city_list' : city_list,
         'test_portion' : 0.2,
         'scale' : False,
-        'mean_imputation' : False,
-        'remove_outliers' : False, # only happens if scaling is performed
-        'outlier_bound' : 3 # number of standard deviations by which outlier are filtered, only necessary if remove_outliers is True
+        'mean_imputation' : False
         }
         # mean_imputation and scale is done in the training loop instead of in this class
 
@@ -55,8 +53,6 @@ class FiveCities():
             if key not in args:
                 args[key] = FiveCities.default_args[key]
         self.args = args
-        self.outliers_removed = []
-                
         
         # Read data
         self.df_dict = {}
@@ -97,10 +93,6 @@ class FiveCities():
             if self.args['scale']:
                 X_train, X_test = FiveCities.scaler(X_train, X_test, self.continuous_var_index)
 
-                # Remove outliers (only possible with scaling)
-                if self.args['remove_outliers']:
-                    X_train, y_train = self.remove_outliers(X_train, y_train, c)
-                    X_test, y_test = self.remove_outliers(X_test, y_test, c)
 
             # Imputation
             if self.args['mean_imputation']:
@@ -126,17 +118,13 @@ class FiveCities():
 
     def scaler(X_train : np.array, X_test : np.array, cont_var_index : list) -> (np.array, np.array):
 
-        scaler = RobustScaler(unit_variance=True)
+        scaler = RobustScaler()
         scaler.fit(X_train[:,0,cont_var_index])
         for t in range(X_train.shape[1]):
             X_train[:,t,cont_var_index] = scaler.transform(X_train[:,t,cont_var_index])
             X_test[:,t,cont_var_index] = scaler.transform(X_test[:,t,cont_var_index])
         
         return X_train, X_test
-
-    def describe_data(self):
-        # TODO: Implement to show data statistics
-        print('Number of outliers removed:', len(self.outliers_removed))
 
     def get_max_train_samples(self, city : str) -> int:
         return self.train_data[city][0].shape[0]
@@ -241,23 +229,3 @@ class FiveCities():
             y_test[i] = df.iloc[indices[-1]][self.args['target']]
         return train_data, test_data, y_train, y_test
         
-    def remove_outliers(self, X : np.array, y : np.array, city : str) -> (np.array, np.array):
-        
-        outlier_indices = []
-        
-        # Loop through samples 
-        # (only check first time step as this is the one that everything is scaled according to)
-        for i in range(X.shape[0]):
-            
-            # Check outlier in all non-categorical
-            outlier_found = np.any(np.abs(X[i,0,self.continuous_var_index]) > self.args['outlier_bound'])
-            if outlier_found:
-                self.outliers_removed.append((X[i,:,:], y[i]))
-                outlier_indices.append(i)
-
-        X = np.delete(X, outlier_indices, axis=0)
-        y = np.delete(y, outlier_indices)
-
-        return X, y
-
-                    
