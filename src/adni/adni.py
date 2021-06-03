@@ -33,7 +33,7 @@ cols_categorical = ['PTGENDER', 'APOE4']
 
 def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
 
-   
+   #Set target based on task
     if task == 'MCIAD' or task == 'AD':
         target = 'AD'
     elif task == 'CNMCI':
@@ -41,6 +41,8 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
     elif task == 'MMSE':
         target = 'MMSE'
 
+    #Data from subjects present at measurements bl, m12, m24, m36, m48
+    #Selection: What data are to be used for training/evaluating (1/3 privileged points)
     data_viscodes = ['bl', 'm12', 'm24', 'm36', 'm48']
     if priv_points == 1:
         selection_viscodes = ['bl', 'm24', 'm48']
@@ -49,6 +51,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
     else:
         raise ValueError('priv_points invalid value: ' + str(priv_points))
 
+    #Read data.
     D = pd.read_csv(set_path)
 
     D['AD'] = D['DX']=='Dementia'
@@ -68,6 +71,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
     D = D.loc[:,['VISCODE', 'RID', 'MCI', 'AD'] + cols_sel]
     D = pd.get_dummies(D, columns=cols_categorical)
 
+    #Drop features with more than nan_threshold% of the observations missing
     to_be_removed = []
     for code in data_viscodes:
         count = len(D[D['VISCODE'] == code])
@@ -78,6 +82,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
                     to_be_removed += [D.columns[i]]
     D = D.drop(to_be_removed, axis=1)
 
+    #Start to packet data into X, Y
     frames = {}
     for code in data_viscodes:
         if code == data_viscodes[-1]:
@@ -85,6 +90,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
         else:
             frames[code] = D[D['VISCODE'] == code]
 
+    #Subjects present at all 'data_viscodes' measurements
     I = get_rids(frames, task, data_viscodes)
 
     data = {}
@@ -118,6 +124,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
 
     models = {}
 
+    #Set models to based on task regression/classification
     if task != 'MMSE':
         models['Baseline'] = LogisticBaseline(cv_search=True, folds=5, random_state = seed)
         models['LuPTS'] = LogisticLUPTS(cv_search=True, folds=5, random_state = seed)
@@ -134,6 +141,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
     top = math.floor(data_size*0.5)
     top = top - (top % step)
 
+    #Range of training sample sizes
     tr_sample_sizes = range(bottom, top, step)
 
     results = {}
@@ -156,6 +164,7 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
             training_data = X[sampled_I_tr,:,:].copy()
             test_data = X[I_ts,:,:].copy()
 
+            #Impute missing values
             for ixx, code in enumerate(selection_viscodes[0:len(selection_viscodes)-1]):
                 for j in range(training_data.shape[2]):
                     if all(np.isnan(training_data[:,ixx,j])):
@@ -211,10 +220,8 @@ def quickADNI(set_path, task, priv_points, nan_threshold = 0.7, seed = 42):
 def get_rids(frames, task, codes):
     
     if task == 'AD' or task == 'MMSE':
-        #Tidigare kod. Lös det med lib
         pass
     
-    #Maybe just paste this in subject selection as an if clause for cn->mci etc...
     elif task == 'CNMCI':
         #Select patients with a negative AD diagnosis at last time step
         #Select patients with CN status at baseline.
