@@ -11,7 +11,7 @@ This repository is the official implementation of [Long-term Prediction with Pri
 - [x] Add executable experiment for synthetic
 - [x] Add executable experiment + data (link or dataset) for FC
 - [ ] Add code for ADNI
-- [ ] Add code for MM
+- [x] Add code for MM
 - [ ] Add some main results in README.md
 
 ![](images/illustration-crop.png)
