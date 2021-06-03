@@ -28,14 +28,14 @@ model_dict_default = {'Baseline' : baseline.Baseline(),
 default_values = {
     'n_list': list(range(100,825,25)),
     'score' : r2_score,
-    'iterations' : 100
+    'iterations' : 200
 }
 
 # Initilize variables and experiment parameters
 set_mpl_default_settings()
 
 # save figures
-save = False
+save = True
 save_folder = '../results/fivecities/'
 if not os.path.exists(save_folder):
     os.mkdir(save_folder)
@@ -111,20 +111,19 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
     Plotting code
 """
 
-def plot_results_timehorizons(output_dict, include_only_model = None, save=save, legend=True, xlim = None, ylim = None, title=''):
-    
+def plot_results_timehorizons(output_dict, include_only_model = None, include_only_timestep = [1], save=save, legend=True, xlim = None, ylim = None, title=''):
       
     n_list = output_dict['n_list']
     city = output_dict['city']
     score_function = output_dict['score']
     sequence_length = output_dict['sequence_length']
     
-
     for idx, timestep in enumerate(output_dict['timestep']):
         
         plt.figure(figsize=(7, 4.5), dpi=160)
         
         if include_only_model is None: model_list = output_dict['model_list']
+        if timestep not in include_only_timestep: continue
 
         for model in model_list:
 
@@ -132,15 +131,13 @@ def plot_results_timehorizons(output_dict, include_only_model = None, save=save,
             if len(list(range(0, sequence_length, timestep))) == 2 and model == 'Stat-LuPTS':
                 continue 
 
-
             # Read for a particular model
             mean = np.asarray([m[0] for m in output_dict['timestep'][timestep][model]])
             standard_dev = np.asarray([m[1] for m in output_dict['timestep'][timestep][model]])
 
-
+            # Plot 
             plt.plot(n_list, mean, label=model, c=method_color(model), marker=method_marker(model), markevery=2)
             plt.fill_between(n_list, mean-standard_dev, mean+standard_dev,  color=method_color(model), alpha = 0.2)
-
 
         ## Customize plot
         # Change axis limits if desired
@@ -156,7 +153,6 @@ def plot_results_timehorizons(output_dict, include_only_model = None, save=save,
 
         if save:
             path = os.path.join(save_folder, f'experiment_{city}_ts{timestep}_T{sequence_length}')
-            if sym_log: path += '_log'
             plt.savefig(path+'.pdf', format='pdf', bbox_inches='tight')
 
 def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], save=save, legend=True, xlim = None, ylim = None, title=''):
@@ -176,7 +172,7 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
     plot_baseline_once = False
     for idx, timestep in enumerate(output_dict['timestep']):
         
-        plt.figure(figsize=(7, 4.5), dpi=160)
+
         
         if include_only_model is None: 
             model_list = output_dict['model_list']
@@ -202,11 +198,11 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
                     # Hard-coded colors (only built for two different PTS, but easily fixed)
                     if timestep == 1:
                         color = 'orange'
-                        label += f'_{nbr_PTS}PTS'
+                        label = model + f'_{nbr_PTS}PTS'
                         marker = 'p'
                     else:
                         color = 'black'
-                        label += f'_{nbr_PTS}PTS'
+                        label = model + f'_{nbr_PTS}PTS'
                         marker = 'X'
                 
                 # We should only plot baseline once (we are looping over many experiments)

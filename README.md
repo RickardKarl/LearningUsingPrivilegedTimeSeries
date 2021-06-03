@@ -10,9 +10,10 @@ This repository is the official implementation of [Long-term Prediction with Pri
 - [x] Add a figure to describe the problem setup 
 - [x] Add executable experiment for synthetic
 - [x] Add executable experiment + data (link or dataset) for FC
-- [ ] Add code for ADNI
+- [x] Add code for ADNI
 - [x] Add code for MM
-- [ ] Add some main results in README.md
+- [ ] Make repo public
+- [ ] Eventually: Add arXiv link
 
 ![](images/illustration-crop.png)
 
@@ -22,25 +23,22 @@ We study learning of predictive models of long-term outcomes that are given acce
 
 ## Requirements
 
-To install requirements:
+Required libraries found in *requirements.txt*
 
-```setup
-pip install -r requirements.txt
-```
-
+## Models
+Baseline and LUPTS are implemented using *sklearn*, the code is found in /src/model/
 
 ## Evaluation
 
 ### Synthethic
 
-To re-produce synthethic experiments, do the following:
-
-Run the all cells in /notebooks/synthetic.ipynb
+To re-produce experiments, run /notebooks/synthetic.ipynb
+Necessary experiment code is found in src/synthetic/
 
 ### Forecasting Air Quality
 
-
-Run the all cells in /notebooks/fivecities.ipynb
+To re-produce experiments, run /notebooks/fivecities.ipynb
+Necessary experiment code is found in src/fivecities/
 
 The data is found in */data/fivecities/*, but can also be downloaded from [here](https://archive.ics.uci.edu/ml/datasets/PM2.5+Data+of+Five+Chinese+Cities).
 
@@ -48,13 +46,11 @@ The data is found in */data/fivecities/*, but can also be downloaded from [here]
 
 **Note**: For the Alzheimer’s and Multiple myeloma progression modeling tasks, the data is not publicly available, but the code which produced the results is still found in this repository. 
 
+#### Alzheimer's progression modelling
+Code is found in /notebooks/ADNI.ipynb and /src/adni/
 
-## Results
-
-Our model achieves the following performance:
-
->📋  Include a table of results from your paper, and link back to the leaderboard for clarity and context. If your main result is a figure, include that figure and link to the command or notebook to reproduce it. 
-
+#### Multiple myeloma progression modelling
+Code is found in /notebooks/mm-prfs.ipynb and /notebooks/mm-tr.ipynb
 
 ## Bibtex entry for citation
 
