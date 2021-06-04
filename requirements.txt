@@ -4,3 +4,8 @@ pandas
 scikit-learn
 tqdm
 notebook
+torch
+pytorch_lightning
+optuna
+lifelines
+torchcontrib
