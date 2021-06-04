@@ -26,19 +26,19 @@ We study learning of predictive models of long-term outcomes that are given acce
 Required libraries found in *requirements.txt*
 
 ## Models
-Baseline and LUPTS are implemented using *sklearn*, the code is found in /src/model/
+Baseline and LUPTS are implemented using sklearn, the code is found in */src/model/*
 
 ## Evaluation
 
 ### Synthethic
 
-To re-produce experiments, run /notebooks/synthetic.ipynb
-Necessary experiment code is found in src/synthetic/
+To re-produce experiments, run */notebooks/synthetic.ipynb*
+Necessary experiment code is found in */src/synthetic/*
 
 ### Forecasting Air Quality
 
-To re-produce experiments, run /notebooks/fivecities.ipynb
-Necessary experiment code is found in src/fivecities/
+To re-produce experiments, run */notebooks/fivecities.ipynb*
+Necessary experiment code is found in */src/fivecities/*
 
 The data is found in */data/fivecities/*, but can also be downloaded from [here](https://archive.ics.uci.edu/ml/datasets/PM2.5+Data+of+Five+Chinese+Cities).
 
@@ -47,10 +47,10 @@ The data is found in */data/fivecities/*, but can also be downloaded from [here]
 **Note**: For the Alzheimer’s and Multiple myeloma progression modeling tasks, the data is not publicly available, but the code which produced the results is still found in this repository. 
 
 #### Alzheimer's progression modelling
-Code is found in /notebooks/ADNI.ipynb and /src/adni/
+Code is found in */notebooks/ADNI.ipynb* and */src/adni/*
 
 #### Multiple myeloma progression modelling
-Code is found in /notebooks/mm-prfs.ipynb and /notebooks/mm-tr.ipynb
+Code is found in */notebooks/mm-prfs.ipynb* and */notebooks/mm-tr.ipynb*
 
 ## Bibtex entry for citation
 
