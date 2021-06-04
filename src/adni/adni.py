@@ -12,9 +12,9 @@ import functools
 import pandas as pd
 import math
 
-from ..model.lupts import LUPTS, StatLUPTS, LogisticLUPTS, LogisticStatLUPTS
-from ..model.baseline import Baseline, LogisticBaseline
-from  ..plotutils import method_color, method_marker, set_mpl_default_settings
+from src.model.lupts import LUPTS, StatLUPTS, LogisticLUPTS, LogisticStatLUPTS
+from src.model.baseline import Baseline, LogisticBaseline
+from src.plotutils import method_color, method_marker, set_mpl_default_settings
 
 
 
