@@ -118,7 +118,7 @@ class FiveCities():
 
     def scaler(X_train : np.array, X_test : np.array, cont_var_index : list) -> (np.array, np.array):
 
-        scaler = RobustScaler()
+        scaler = RobustScaler(unit_variance=1)
         scaler.fit(X_train[:,0,cont_var_index])
         for t in range(X_train.shape[1]):
             X_train[:,t,cont_var_index] = scaler.transform(X_train[:,t,cont_var_index])
