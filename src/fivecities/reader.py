@@ -44,9 +44,15 @@ class FiveCities():
         'test_portion' : 0.2,
         'scale' : False,            # mean_imputation and scale is done in the training loop ((experiment.py) instead of in this class
         'mean_imputation' : False,  # mean_imputation and scale is done in the training loop (experiment.py) instead of in this class
-        'hayashi' : False
+        'hayashi' : False,
+        'classification' : False
         }
        
+    hayashi_values = {
+        'freq' : 4,
+        'k' : 14,
+        'threshold': 25
+    }
 
     def __init__(self, path : str, args = {}):
         
@@ -76,7 +82,7 @@ class FiveCities():
             # Code added to replicate Hayashi et al (2019)
             if self.args['hayashi']:
                 
-                self.args['sequence_length'] = 15 # To make k=15 step-ahead prediction
+                self.args['sequence_length'] = FiveCities.hayashi_values['k'] # To make k=15 step-ahead prediction
             
                 # Add datetime for indexing
                 self.df_dict[c]['datetime'] = pd.to_datetime(self.df_dict[c][['year','month','day']])
@@ -84,7 +90,7 @@ class FiveCities():
                 # Dummy encoding of categorical variables
                 self.df_dict[c] = pd.get_dummies(self.df_dict[c], columns=FiveCities.categorical_list)
 
-                freq = 4 # This is to get mean of every four days
+                freq = FiveCities.hayashi_values['freq'] # This is to get mean of every four days
                 date_range = pd.date_range(self.df_dict[c].iloc[0]['datetime'], self.df_dict[c].iloc[-1]['datetime'], freq=f'{freq}D')
 
                 # Loop over starting days
@@ -113,7 +119,6 @@ class FiveCities():
                 self.df_dict[c] = self.df_dict[c][features]  # timestamp will be removed later in filter_df method
             
             else: # Ordinary code from our work
-
                 # Subset with relevant features
                 self.df_dict[c] = self.df_dict[c][(FiveCities.feature_list + [self.args['target']]+['timestamp'])]  # timestamp will be removed later in filter_df method
                 # Dummy encoding of categorical variables
@@ -137,10 +142,13 @@ class FiveCities():
             if self.args['mean_imputation']:
                 X_train, X_test = FiveCities.mean_imputation(X_train, X_test)
 
+            # Hayashi uses classification
+            if self.args['hayashi']: self.args['classification'] = True
+            
             # Turn the target values into binary values for classification 
-            if self.args['hayashi']: # TODO: Check threshold value
-                y_train = 2.5 < y_train
-                y_test  = 2.5 < y_test
+            if self.args['classification']: # TODO: Check threshold value
+                y_train = FiveCities.hayashi_values['threshold'] < y_train
+                y_test  = FiveCities.hayashi_values['threshold'] < y_test
 
             # Save data in dicts
             self.train_data[c] = (X_train, y_train)
@@ -159,7 +167,9 @@ class FiveCities():
 
     def scaler(X_train : np.array, X_test : np.array, cont_var_index : list) -> (np.array, np.array):
 
-        scaler = RobustScaler(unit_variance=1)
+        # TODO: Add min-max scaler for Hayashi?
+
+        scaler = RobustScaler(unit_variance=1) 
         scaler.fit(X_train[:,0,cont_var_index])
         for t in range(X_train.shape[1]):
             X_train[:,t,cont_var_index] = scaler.transform(X_train[:,t,cont_var_index])
@@ -218,46 +228,58 @@ class FiveCities():
         # Finds sequences with the desired length where there are no missing values
         # Adds a small gap between all sequences to decrease interdependence between sequences
         
-        while idx <  len(df):
 
-            data = df.iloc[idx][self.args['target']]
-            time_diff =  df.iloc[idx]['timestamp'] - prev_timestamp 
-            prev_timestamp = df.iloc[idx]['timestamp']
+        if not self.args['hayashi']:
+            while idx <  len(df):
 
-            if np.abs(time_diff - 3600) < 1e-2 or self.args['hayashi']: # If hayashi is True, then we do not care about the exact time diff in the same way
-                
-                if np.isnan(data): 
+                data = df.iloc[idx][self.args['target']]
+                time_diff =  df.iloc[idx]['timestamp'] - prev_timestamp 
+                prev_timestamp = df.iloc[idx]['timestamp']
 
-                    if len(tmp_idx_list) >= self.args['sequence_length'] + 1:  # plus one since the outcome should come afterwards
-                        idx_list.append(tmp_idx_list)
-                    tmp_idx_list = [] # reset
-                    idx += self.args['gap'] - 1
-                else:
+                if np.abs(time_diff - 3600) < 1e-2:
+                    
+                    if np.isnan(data): 
 
-                    if len(tmp_idx_list) >= self.args['sequence_length'] + 1: # plus one since the outcome should come afterwards
-                        idx_list.append(tmp_idx_list)
+                        if len(tmp_idx_list) >= self.args['sequence_length'] + 1:  # plus one since the outcome should come afterwards
+                            idx_list.append(tmp_idx_list)
                         tmp_idx_list = [] # reset
                         idx += self.args['gap'] - 1
                     else:
-                        tmp_idx_list.append(idx)
-            else:
 
-                # happens if the time difference between previous and current datapoint is not an hour exactly
-                tmp_idx_list = [] # reset
+                        if len(tmp_idx_list) >= self.args['sequence_length'] + 1: # plus one since the outcome should come afterwards
+                            idx_list.append(tmp_idx_list)
+                            tmp_idx_list = [] # reset
+                            idx += self.args['gap'] - 1
+                        else:
+                            tmp_idx_list.append(idx)
+                else:
 
-                idx += 1
+                    # happens if the time difference between previous and current datapoint is not an hour exactly
+                    tmp_idx_list = [] # reset
 
-            
-        if len(tmp_idx_list) >= self.args['sequence_length'] + 1:
-            idx_list.append(tmp_idx_list)
- 
+                idx += 1    
+
+            if len(tmp_idx_list) >= self.args['sequence_length'] + 1:
+                idx_list.append(tmp_idx_list)
+
+        else:
+            # If Hayashi replication, we have overlapping sequences to increase sample size
+            # TODO: Ensure that training and test set do not overlap
+            idx_list = []
+            for idx in range(0, len(df)-(self.args['sequence_length'] + 1)):
+                tmp_idx_list = list(range(idx, idx + self.args['sequence_length'] + 1))
+                idx_list.append(tmp_idx_list)        
+
         df = df.drop(labels=['timestamp'], axis=1) # do not include timestamp in final features
         self.header[city] = list(self.df_dict[city].columns)
-
+            
         # Split data into training and test set
         split_idx = int(len(idx_list)*(1-self.args['test_portion'])) 
         train_list = idx_list[:split_idx]
-        test_list = idx_list[split_idx+1:]
+        if not self.args['hayashi']:
+            test_list = idx_list[split_idx+1:]
+        else:
+            test_list = idx_list[split_idx+self.args['sequence_length']+1:] # To ensure gap between training and test set for the Hayashi replication
 
         # Create numpy arrays with shape (nbrSequences, seqLength, dim)
         train_data = np.zeros((len(train_list), self.args['sequence_length'], len(df.columns)))
@@ -277,5 +299,5 @@ class FiveCities():
 
 if __name__ == "__main__":
 
-    fc = FiveCities("/Users/rickardkarlsson/Documents/Chalmers/MSc/Thesis/LearningUsingPrivilegedTimeSeries/data/fivecities/",args={'hayashi' : False})
-    print(fc.sample('beijing'))
+    fc = FiveCities("/Users/rickardkarlsson/Documents/Chalmers/MSc/Thesis/LearningUsingPrivilegedTimeSeries/data/fivecities/", args={'hayashi' : True})
+    print(fc.sample('beijing')[2].shape)

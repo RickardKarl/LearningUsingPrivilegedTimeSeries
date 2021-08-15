@@ -60,10 +60,11 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
     fc_args = {**{'sequence_length': sequence_length, 'city_list' : [city]},  **fc_args}
     fc = FiveCities(data_path, args=fc_args)
 
-    if fc.args['hayashi'] is True:
+    if fc.args['classification'] is True:
         model_dict = model_dict_classification_default
-        n_list = list(range(25,100,5))
-        default_values['scores'] = accuracy_score
+        default_values['score'] = accuracy_score
+    if fc.args['hayashi']: 
+        n_list = list(range(250,500,50))
 
     output_dict = {'city': city,
                     'score': default_values['score'],
