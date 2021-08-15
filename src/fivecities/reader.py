@@ -34,6 +34,7 @@ class FiveCities():
     # Not included due to many outliers but not providing much predictive information:  ['precipitation', 'Iprec']
     
     categorical_list = ['season', 'cbwd']
+    categorical_dummy = ['season_1', 'season_2', 'season_3', 'season_4', 'cbwd_NE', 'cbwd_NW', 'cbwd_SE', 'cbwd_cv, cbwd_SW']
     
     default_args = {
         'sequence_length' : 12,
@@ -41,10 +42,11 @@ class FiveCities():
         'target' : 'PM_US Post',
         'city_list' : city_list,
         'test_portion' : 0.2,
-        'scale' : False,
-        'mean_imputation' : False
+        'scale' : False,            # mean_imputation and scale is done in the training loop ((experiment.py) instead of in this class
+        'mean_imputation' : False,  # mean_imputation and scale is done in the training loop (experiment.py) instead of in this class
+        'hayashi' : False
         }
-        # mean_imputation and scale is done in the training loop instead of in this class
+       
 
     def __init__(self, path : str, args = {}):
         
@@ -53,7 +55,7 @@ class FiveCities():
             if key not in args:
                 args[key] = FiveCities.default_args[key]
         self.args = args
-        
+
         # Read data
         self.df_dict = {}
         self.train_data = {}
@@ -70,41 +72,80 @@ class FiveCities():
             # Create a epoch timestamp which summarize data from year, month, day and hour columns
             # Not necessary
             self.df_dict[c]['timestamp'] = self.df_dict[c].apply(convert_to_timestamp,axis=1)
+
+            # Code added to replicate Hayashi et al (2019)
+            if self.args['hayashi']:
+                
+                self.args['sequence_length'] = 15 # To make k=15 step-ahead prediction
             
+                # Add datetime for indexing
+                self.df_dict[c]['datetime'] = pd.to_datetime(self.df_dict[c][['year','month','day']])
+                
+                # Dummy encoding of categorical variables
+                self.df_dict[c] = pd.get_dummies(self.df_dict[c], columns=FiveCities.categorical_list)
+
+                freq = 4 # This is to get mean of every four days
+                date_range = pd.date_range(self.df_dict[c].iloc[0]['datetime'], self.df_dict[c].iloc[-1]['datetime'], freq=f'{freq}D')
+
+                # Loop over starting days
+                tmp_list = []
+                idx = 0
+                while idx < len(date_range) - 1:
+
+                    # Compute between start_date and end_date (which is a four day interval)
+                    start_date = date_range[idx]
+                    end_date = date_range[idx+1]
+                    mask = (self.df_dict[c]['datetime'] > start_date) & (self.df_dict[c]['datetime'] <= end_date)
+                    tmp_list.append(self.df_dict[c][mask].mean(numeric_only=True)) 
+                    idx += 1
+
+                # Create new df with means of every four days
+                self.df_dict[c] = pd.DataFrame(tmp_list)
+
+                # Subset with relevant features
+                features = FiveCities.feature_list + [self.args['target']] + ['timestamp']
+                for f in FiveCities.categorical_list:
+                    features.remove(f)
+                for f in FiveCities.categorical_dummy:
+                    if f in self.df_dict[c].columns:
+                        features.append(f)
+
+                self.df_dict[c] = self.df_dict[c][features]  # timestamp will be removed later in filter_df method
             
-            # Subset with relevant features
-            self.df_dict[c] = self.df_dict[c][(FiveCities.feature_list + [self.args['target']]+['timestamp'])]  # timestamp will be removed later in filter_dd method
-            
-            # Dummy encoding of categorical variables
-            self.df_dict[c] = pd.get_dummies(self.df_dict[c], columns=FiveCities.categorical_list)
+            else: # Ordinary code from our work
+
+                # Subset with relevant features
+                self.df_dict[c] = self.df_dict[c][(FiveCities.feature_list + [self.args['target']]+['timestamp'])]  # timestamp will be removed later in filter_df method
+                # Dummy encoding of categorical variables
+                self.df_dict[c] = pd.get_dummies(self.df_dict[c], columns=FiveCities.categorical_list)
 
             # Exception for Beijing since it is missing a value for the cwbd categorical feature
             if c == 'beijing':
                 self.df_dict[c]['cbwd_SW'] = 0
-
         
             # Find sequences of desired length in data without missing values
             # Return training and test set
             X_train, X_test, y_train, y_test = self.filter_df(self.df_dict[c], c)
-            
+
             self.continuous_var_index = [self.header[c].index(feature) for feature in (FiveCities.feature_list + [self.args['target']]) if feature not in FiveCities.categorical_list]
             
             # Scaling 
             if self.args['scale']:
                 X_train, X_test = FiveCities.scaler(X_train, X_test, self.continuous_var_index)
 
-
             # Imputation
             if self.args['mean_imputation']:
                 X_train, X_test = FiveCities.mean_imputation(X_train, X_test)
-    
- 
+
+            # Turn the target values into binary values for classification 
+            if self.args['hayashi']: # TODO: Check threshold value
+                y_train = 2.5 < y_train
+                y_test  = 2.5 < y_test
 
             # Save data in dicts
             self.train_data[c] = (X_train, y_train)
             self.test_data[c] = (X_test, y_test)
-
-            
+        
         #print("Done!")
         
     def mean_imputation(X_train : np.array, X_test : np.array) -> (np.array, np.array):
@@ -169,28 +210,30 @@ class FiveCities():
         """
             Filter dataframe (df) and return a train/test set 
         """
+
         idx = 0
         idx_list = []
         tmp_idx_list = []
         prev_timestamp = df.iloc[0]['timestamp'] - 3600  # initalize
-
-
         # Finds sequences with the desired length where there are no missing values
         # Adds a small gap between all sequences to decrease interdependence between sequences
+        
         while idx <  len(df):
 
             data = df.iloc[idx][self.args['target']]
             time_diff =  df.iloc[idx]['timestamp'] - prev_timestamp 
             prev_timestamp = df.iloc[idx]['timestamp']
 
-            if np.abs(time_diff - 3600) < 1e-2:
+            if np.abs(time_diff - 3600) < 1e-2 or self.args['hayashi']: # If hayashi is True, then we do not care about the exact time diff in the same way
                 
-                if np.isnan(data):
+                if np.isnan(data): 
+
                     if len(tmp_idx_list) >= self.args['sequence_length'] + 1:  # plus one since the outcome should come afterwards
                         idx_list.append(tmp_idx_list)
                     tmp_idx_list = [] # reset
                     idx += self.args['gap'] - 1
                 else:
+
                     if len(tmp_idx_list) >= self.args['sequence_length'] + 1: # plus one since the outcome should come afterwards
                         idx_list.append(tmp_idx_list)
                         tmp_idx_list = [] # reset
@@ -198,18 +241,19 @@ class FiveCities():
                     else:
                         tmp_idx_list.append(idx)
             else:
+
                 # happens if the time difference between previous and current datapoint is not an hour exactly
                 tmp_idx_list = [] # reset
 
-            idx += 1
+                idx += 1
+
             
+        if len(tmp_idx_list) >= self.args['sequence_length'] + 1:
+            idx_list.append(tmp_idx_list)
+ 
         df = df.drop(labels=['timestamp'], axis=1) # do not include timestamp in final features
         self.header[city] = list(self.df_dict[city].columns)
 
-        if len(tmp_idx_list) >= self.args['sequence_length'] + 1:
-            idx_list.append(tmp_idx_list)
-        
-        
         # Split data into training and test set
         split_idx = int(len(idx_list)*(1-self.args['test_portion'])) 
         train_list = idx_list[:split_idx]
@@ -227,5 +271,11 @@ class FiveCities():
         for i, indices in enumerate(test_list):
             test_data[i,:,:] = df.iloc[indices[:-1]].values
             y_test[i] = df.iloc[indices[-1]][self.args['target']]
+
         return train_data, test_data, y_train, y_test
         
+
+if __name__ == "__main__":
+
+    fc = FiveCities("/Users/rickardkarlsson/Documents/Chalmers/MSc/Thesis/LearningUsingPrivilegedTimeSeries/data/fivecities/",args={'hayashi' : False})
+    print(fc.sample('beijing'))

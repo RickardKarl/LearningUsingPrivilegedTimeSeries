@@ -11,7 +11,7 @@ sys.path.append('..')
 from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt 
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, accuracy_score
 
 # Import packages
 from src.model import baseline, lupts
@@ -22,6 +22,10 @@ from src.plotutils import set_mpl_default_settings, method_color, method_marker,
 model_dict_default = {'Baseline' : baseline.Baseline(),
                 'LuPTS' : lupts.LUPTS(),
                 'Stat-LuPTS': lupts.StatLUPTS()}
+
+model_dict_classification_default = {'Baseline' : baseline.LogisticBaseline(logistic_args={'max_iter': 5000}),
+                'LuPTS' : lupts.LogisticLUPTS(logistic_args={'max_iter': 5000}),
+                'Stat-LuPTS': lupts.LogisticStatLUPTS(logistic_args={'max_iter': 5000})}
 
 # Experiment parameters
 # default values
@@ -56,6 +60,10 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
     fc_args = {**{'sequence_length': sequence_length, 'city_list' : [city]},  **fc_args}
     fc = FiveCities(data_path, args=fc_args)
 
+    if fc.args['hayashi'] is True:
+        model_dict = model_dict_classification_default
+        n_list = list(range(25,100,5))
+        default_values['scores'] = accuracy_score
 
     output_dict = {'city': city,
                     'score': default_values['score'],
