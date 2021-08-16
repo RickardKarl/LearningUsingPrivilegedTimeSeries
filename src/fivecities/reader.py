@@ -49,7 +49,7 @@ class FiveCities():
         }
        
     hayashi_values = {
-        'freq' : 4,
+        'freq' : 1,
         'k' : 14,
         'threshold': 25
     }
@@ -82,7 +82,7 @@ class FiveCities():
             # Code added to replicate Hayashi et al (2019)
             if self.args['hayashi']:
                 
-                self.args['sequence_length'] = FiveCities.hayashi_values['k'] # To make k=15 step-ahead prediction
+                #self.args['sequence_length'] = self.hayashi_values['k'] # To make k=15 step-ahead prediction
             
                 # Add datetime for indexing
                 self.df_dict[c]['datetime'] = pd.to_datetime(self.df_dict[c][['year','month','day']])
@@ -147,8 +147,8 @@ class FiveCities():
             
             # Turn the target values into binary values for classification 
             if self.args['classification']: # TODO: Check threshold value
-                y_train = FiveCities.hayashi_values['threshold'] < y_train
-                y_test  = FiveCities.hayashi_values['threshold'] < y_test
+                y_train = X_train[:,0,self.header[c].index(self.args['target'])] < y_train
+                y_test  = X_test[:,0,self.header[c].index(self.args['target'])] < y_test
 
             # Save data in dicts
             self.train_data[c] = (X_train, y_train)
@@ -300,4 +300,8 @@ class FiveCities():
 if __name__ == "__main__":
 
     fc = FiveCities("/Users/rickardkarlsson/Documents/Chalmers/MSc/Thesis/LearningUsingPrivilegedTimeSeries/data/fivecities/", args={'hayashi' : True})
-    print(fc.sample('beijing')[2].shape)
+    print(fc.sample('beijing')[0].shape)
+    print(fc.sample('beijing')[1].shape)
+    
+    import matplotlib.pyplot as plt
+    
