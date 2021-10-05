@@ -12,8 +12,8 @@ This repository is the official implementation of [Long-term Prediction with Pri
 - [x] Add executable experiment + data (link or dataset) for FC
 - [x] Add code for ADNI
 - [x] Add code for MM
-- [ ] Make repo public
-- [ ] Eventually: Add arXiv link
+- [x] Make repo public
+- [ ] Add arXiv link
 
 ![](images/illustration-crop.png)
 
