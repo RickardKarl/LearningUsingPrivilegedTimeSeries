@@ -14,14 +14,16 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
 
 # Import packages
-from src.model import baseline, lupts
+from src.model import baseline, lupts, hayashi
 from src.fivecities.reader import FiveCities
 from src.plotutils import set_mpl_default_settings, method_color, method_marker, score_label
 
 # Model
-model_dict_default = {'Baseline' : baseline.Baseline(),
-                'LuPTS' : lupts.LUPTS(),
-                'Stat-LuPTS': lupts.StatLUPTS()}
+model_dict_default = {
+#     'Baseline' : baseline.Baseline(),
+#                 'LuPTS' : lupts.LUPTS(),
+#                 'Stat-LuPTS': lupts.StatLUPTS(), 
+                'Hayashi': hayashi.HayashiModel()}
 
 # Experiment parameters
 # default values
@@ -99,6 +101,8 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
 
             for model in model_dict:
                 res_dict[model].append((np.mean(tmp_res_dict[model]), np.std(tmp_res_dict[model])))
+            import pdb; pdb.set_trace()
+            print(res_dict)
 
 
         output_dict['timestep'][timestep] = { model : res_dict[model] for model in model_dict}
