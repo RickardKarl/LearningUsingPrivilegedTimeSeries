@@ -20,17 +20,19 @@ from src.plotutils import set_mpl_default_settings, method_color, method_marker,
 
 # Model
 model_dict_default = {
-#     'Baseline' : baseline.Baseline(),
-#                 'LuPTS' : lupts.LUPTS(),
-#                 'Stat-LuPTS': lupts.StatLUPTS(), 
-                'Hayashi': hayashi.HayashiModel()}
+    'Distill-Concat': hayashi.HayashiModel(),
+    'Distill-Seq': hayashi.HayashiModel(distill_seq=True),
+    'Baseline' : baseline.Baseline(),
+                'LuPTS' : lupts.LUPTS(),
+#                 'Stat-LuPTS': lupts.StatLUPTS()
+                }
 
 # Experiment parameters
 # default values
 default_values = {
-    'n_list': list(range(100,825,25)),
+    'n_list': list(range(100,825,50)),
     'score' : r2_score,
-    'iterations' : 200
+    'iterations' : 50
 }
 
 # Initilize variables and experiment parameters
@@ -101,7 +103,6 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
 
             for model in model_dict:
                 res_dict[model].append((np.mean(tmp_res_dict[model]), np.std(tmp_res_dict[model])))
-            import pdb; pdb.set_trace()
             print(res_dict)
 
 

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from src.model import lupts 
 from .. import base
 from . import modelutils
 
@@ -15,13 +16,17 @@ class LinearRegression(torch.nn.Module):
 
 class HayashiModel(base.Model): 
     
-    def __init__(self, args={}, model_args={}, train_args={}): 
+    def __init__(self, args={}, model_args={}, train_args={}, distill_seq=False): 
         self.args  = args
         self.model_args = model_args
         self.train_args = train_args
+        self.distill_seq = distill_seq
         
         intercept = args.get('intercept_last_step') if 'intercept_last_step' in args else True
-        self.teacher_model = modelutils.linear_model(self.args, model_args=self.model_args, intercept=intercept)
+        if not self.distill_seq: 
+            self.teacher_model = modelutils.linear_model(self.args, model_args=self.model_args, intercept=intercept)
+        else: 
+            self.teacher_model = lupts.LUPTS()
         self.student_model = None
 
     def hayashi_loss(self, y_hat, y_hard, y_soft, lambda_): 
@@ -36,8 +41,12 @@ class HayashiModel(base.Model):
         # generate y_soft 
         Xpriv  = np.reshape(X[:,1:,:],(X[:,1:,:].shape[0],-1))
         Xbase  = X[:,0,:]
-        teacher_fitted = self.teacher_model.fit(Xpriv,y_hard)
-        y_soft = teacher_fitted.predict(Xpriv)
+        if self.distill_seq: 
+            self.teacher_model.fit(X,y_hard)
+            y_soft = self.teacher_model.predict(X)
+        else: 
+            teacher_fitted = self.teacher_model.fit(Xpriv,y_hard)
+            y_soft = teacher_fitted.predict(Xpriv)
         
         # instantiate student model 
         self.student_model = LinearRegression(Xbase.shape[1],1)
@@ -45,8 +54,8 @@ class HayashiModel(base.Model):
             self.student_model.cuda()
         
         lambda_ = self.train_args['lambda'] if ('lambda' in self.train_args) else 0.5
-        epochs  = self.train_args['epochs'] if ('epochs' in self.train_args) else 5
-        lr      = self.train_args['lr'] if ('lr' in self.train_args) else 1e-3
+        epochs  = self.train_args['epochs'] if ('epochs' in self.train_args) else 200
+        lr      = self.train_args['lr'] if ('lr' in self.train_args) else 1e0
         optimizer = torch.optim.Adam(self.student_model.parameters(), lr=lr)
 
         for epoch in range(epochs):
@@ -68,14 +77,14 @@ class HayashiModel(base.Model):
 
             # get loss for the predicted output
             loss = self.hayashi_loss(y_hat, Y_hard, Y_soft, lambda_)
-            print(loss)
             # get gradients w.r.t to parameters
             loss.backward()
 
             # update parameters
             optimizer.step()
-
-            print('epoch {}, loss {}'.format(epoch, loss.item()))
+            
+            if epoch % 50 == 0: 
+                print('epoch {}, loss {}'.format(epoch, loss.item()))
 
     def predict(self, X : np.array) -> np.array:
         Xbase = X[:,0,:]
