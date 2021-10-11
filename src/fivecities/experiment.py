@@ -20,10 +20,10 @@ from src.plotutils import set_mpl_default_settings, method_color, method_marker,
 
 # Model
 model_dict_default = {
-    'Distill-Concat': hayashi.HayashiModel(),
     'Distill-Seq': hayashi.HayashiModel(distill_seq=True),
+    'Distill-Concat': hayashi.HayashiModel(),
     'Baseline' : baseline.Baseline(),
-                'LuPTS' : lupts.LUPTS(),
+    'LuPTS' : lupts.LUPTS()
 #                 'Stat-LuPTS': lupts.StatLUPTS()
                 }
 
@@ -32,7 +32,7 @@ model_dict_default = {
 default_values = {
     'n_list': list(range(100,825,50)),
     'score' : r2_score,
-    'iterations' : 50
+    'iterations' : 5
 }
 
 # Initilize variables and experiment parameters
@@ -103,7 +103,6 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
 
             for model in model_dict:
                 res_dict[model].append((np.mean(tmp_res_dict[model]), np.std(tmp_res_dict[model])))
-            print(res_dict)
 
 
         output_dict['timestep'][timestep] = { model : res_dict[model] for model in model_dict}
@@ -128,7 +127,7 @@ def plot_results_timehorizons(output_dict, include_only_model = None, include_on
         plt.figure(figsize=(7, 4.5), dpi=160)
         
         if include_only_model is None: model_list = output_dict['model_list']
-        if timestep not in include_only_timestep: continue
+        #if timestep not in include_only_timestep: continue
 
         for model in model_list:
 
@@ -175,9 +174,8 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
     plt.figure(figsize=(7, 4.5), dpi=160)
 
     plot_baseline_once = False
-    for idx, timestep in enumerate(output_dict['timestep']):
-        
 
+    for idx, timestep in enumerate(output_dict['timestep']):
         
         if include_only_model is None: 
             model_list = output_dict['model_list']
@@ -190,13 +188,35 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
             if len(list(range(0, sequence_length, timestep))) == 2 and model == 'Stat-LuPTS':
                 continue 
             
+            
+            #Somehow just choose the best Hayashi seq and concat respectively over timesteps
+            #Basing this on the experiment with most available samples
+            best_mean_score = -100000000
+            time_to_keep = -1
+            if model != 'Baseline' and model != 'LuPTS':
+                for tstep in output_dict['timestep'].keys():
+                    m = output_dict['timestep'][tstep][model][-1][0]
+                    if m > best_mean_score:
+                        best_mean_score = m
+                        time_to_keep = tstep
+
+            
+
+            
+            if (model != 'Baseline' and model != 'LuPTS') and (timestep != time_to_keep):
+                continue
+            
+
+
             # If we wish to skip a particular PTS value
             if timestep not in timestep_list:
                 continue
+
+   
             else:
                 
                 # Compute the number of privileged time points by skipping first index and then counting number of steps we perform
-                if model != 'Baseline':
+                if model == 'LuPTS':
                     
                     nbr_PTS = len(list(range(1, sequence_length, timestep))) 
 
@@ -210,6 +230,18 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
                         label = model + f'_{nbr_PTS}PTS'
                         marker = 'X'
                 
+                elif model == 'Distill-Concat':
+                    nbr_PTS = len(list(range(1, sequence_length, timestep)))
+                    color = 'green'
+                    label = model + f'_{nbr_PTS}PTS'
+                    marker = 'D'
+
+                elif model == 'Distill-Seq':
+                    nbr_PTS = len(list(range(1, sequence_length, timestep)))
+                    color = 'c'
+                    label = model + f'_{nbr_PTS}PTS'
+                    marker = '^'
+
                 # We should only plot baseline once (we are looping over many experiments)
                 elif plot_baseline_once:
                     continue

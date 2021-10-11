@@ -39,12 +39,16 @@ class HayashiModel(base.Model):
     def fit(self, X : np.array, y_hard : np.array): 
         
         # generate y_soft 
-        Xpriv  = np.reshape(X[:,1:,:],(X[:,1:,:].shape[0],-1))
         Xbase  = X[:,0,:]
-        if self.distill_seq: 
-            self.teacher_model.fit(X,y_hard)
-            y_soft = self.teacher_model.predict(X)
+        if self.distill_seq:
+            #Pretty sure this should be Xpriv instead of X
+            #self.teacher_model.fit(X,y_hard)
+            #y_soft = self.teacher_model.predict(X)
+            Xpriv = X[:,1:,:]
+            self.teacher_model.fit(Xpriv,y_hard)
+            y_soft = self.teacher_model.predict(Xpriv)
         else: 
+            Xpriv  = np.reshape(X[:,1:,:],(X[:,1:,:].shape[0],-1))
             teacher_fitted = self.teacher_model.fit(Xpriv,y_hard)
             y_soft = teacher_fitted.predict(Xpriv)
         
@@ -54,9 +58,11 @@ class HayashiModel(base.Model):
             self.student_model.cuda()
         
         lambda_ = self.train_args['lambda'] if ('lambda' in self.train_args) else 0.5
-        epochs  = self.train_args['epochs'] if ('epochs' in self.train_args) else 200
+        epochs  = self.train_args['epochs'] if ('epochs' in self.train_args) else 40
         lr      = self.train_args['lr'] if ('lr' in self.train_args) else 1e0
         optimizer = torch.optim.Adam(self.student_model.parameters(), lr=lr)
+
+        #Somehow introduce hyper tuning for lambda
 
         for epoch in range(epochs):
             # Converting inputs and labels to Variable
@@ -83,8 +89,10 @@ class HayashiModel(base.Model):
             # update parameters
             optimizer.step()
             
+            '''
             if epoch % 50 == 0: 
                 print('epoch {}, loss {}'.format(epoch, loss.item()))
+            '''
 
     def predict(self, X : np.array) -> np.array:
         Xbase = X[:,0,:]
