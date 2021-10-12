@@ -161,46 +161,6 @@ class KNRegressorLuPTS():
         return self.knCV.predict(X[:,0,:])
 
 
-class MLPRegressorLuPTS():
-
-    """
-    Adaption of MLPRegressor from sklearn with built-in hyperparameter opt.
-    """
-    def __init__(self):
-
-        self.model = MLPRegressor(activation='tanh', solver ='lbfgs')
-        self.mlpCV = None
-
-        # Hyperparameters for regressor
-
-        # Number of neurons
-        hidden_layer_sizes = [(i,) for i in range(10,100,10)]
-        # L2 reg.
-        alpha = [0.0001, 0.001, 0.01]
-        # Create the random grid
-        self.random_grid = {'hidden_layer_sizes': hidden_layer_sizes,
-                    'alpha': alpha
-                    }
-
-    def fit(self, X : np.array, y : np.array):
-
-        # Mute warnings from sklearn due to MLPRegressor not converging
-        def warn(*args, **kwargs):
-            pass
-        import warnings
-        warnings.warn = warn
-
-        self.mlpCV = RandomizedSearchCV(estimator=self.model,
-                                        param_distributions=self.random_grid,
-                                        n_jobs=-1,
-                                        n_iter=50,
-                                        cv=2)
-        self.mlpCV.fit(X[:,0,:], y)
-    
-    def predict(self, X : np.array) -> np.array:
-        return self.mlpCV.predict(X[:,0,:])
-
-
 class ModelWrapper():
 
     '''
