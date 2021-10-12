@@ -12,6 +12,8 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt 
 from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
+from itertools import product 
 
 # Import packages
 from src.model import baseline, lupts, hayashi
@@ -32,7 +34,13 @@ model_dict_default = {
 default_values = {
     'n_list': list(range(100,825,50)),
     'score' : r2_score,
-    'iterations' : 5
+    'iterations' : 75
+}
+
+# Model hyperparameters 
+hp_args = {
+    'Distill-Seq': {'lambda': [0.25, 0.5, 0.75], 'epochs': [200], 'lr': [1e0]}, 
+    'Distill-Concat': {'lambda': [0.25, 0.5, 0.75], 'epochs': [200], 'lr': [1e0]}
 }
 
 # Initilize variables and experiment parameters
@@ -47,7 +55,8 @@ if not os.path.exists(save_folder):
 data_path = '../data/fivecities'
 
 
-def run_experiment(city : str, sequence_length : int, timestep_list : list, n_list = default_values['n_list'], model_dict=model_dict_default, fc_args = {}):
+def run_experiment(city : str, sequence_length : int, timestep_list : list, n_list = default_values['n_list'], \
+                   model_dict=model_dict_default, fc_args = {}):
     
     """
     city : select among ['beijing', 'shanghai', 'shenyang', 'chengdu','guangzhou']
@@ -93,9 +102,36 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
 
                 X_train, X_test = FiveCities.scaler(X_train, X_test, fc.continuous_var_index)
                 X_train, X_test = FiveCities.mean_imputation(X_train, X_test)
-
-
+                
                 for model in model_dict:
+                    # do a hp search over specified parameters (only supported for distillation models, e.g. Hayashi)
+                    if model in hp_args: 
+                        # split up training set into train and validate
+                        tr_idxs, val_idxs = train_test_split(np.arange(X_train.shape[0]),test_size=0.2,random_state=42)
+                        X_hp_train = X_train[tr_idxs]; X_hp_valid = X_train[val_idxs]
+                        y_hp_train = y_train[tr_idxs]; y_hp_valid = y_train[val_idxs]
+                        
+                        # do hp search and then refit with best combo 
+                        param_names = hp_args[model].keys()
+                        param_lists = [hp_args[model][k] for k in param_names]
+                        
+                        best_hp = (-1000, {})
+                        for elem in product(*param_lists): 
+                            if model == 'Distill-Seq':     
+                                params = {k:elem[i] for i,k in enumerate(param_names)}
+                                hp_model = hayashi.HayashiModel(train_args=params, distill_seq=True)
+                            elif model == 'Distill-Concat': 
+                                params = {k:elem[i] for i,k in enumerate(param_names)}
+                                hp_model = hayashi.HayashiModel(train_args=params)
+                            else: 
+                                raise ValueError('No support for hp search over non distillation models.')
+                            hp_model.fit(X_hp_train, y_hp_train)
+                            new_r2 = default_values['score'](y_hp_valid, hp_model.predict(X_hp_valid))
+                            if new_r2 > best_hp[0]: 
+                                best_hp = (new_r2, params)
+                        print(f'timestep: {timestep}, n: {n}, model: {model}, params: {best_hp}')
+                        model_dict[model].set_train_args(best_hp[1])
+                    # fit model
                     model_dict[model].fit(X_train, y_train)
                 
                 for model in model_dict:

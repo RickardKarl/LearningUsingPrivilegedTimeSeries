@@ -36,6 +36,13 @@ class HayashiModel(base.Model):
         loss = 0.5*((1-lambda_)*torch.nn.functional.mse_loss(y_hat,y_hard) + lambda_*torch.nn.functional.mse_loss(y_hat,y_soft)) # replace mse
         return loss 
 
+    def set_train_args(self, train_args): 
+        # used to set the train args after a hyperparameter search
+        assert 'lambda' in train_args.keys() 
+        assert 'epochs' in train_args.keys()
+        assert 'lr' in train_args.keys()
+        self.train_args = train_args 
+
     def fit(self, X : np.array, y_hard : np.array): 
         
         # generate y_soft 
