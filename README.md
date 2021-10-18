@@ -1,5 +1,5 @@
 
-# Long-term Prediction with Privileged Time Series in Linear Dynamical Systems
+# PAPER TITLE
 
 
 
