@@ -3,16 +3,10 @@
 
 
 
-This repository is the official implementation of [Long-term Prediction with Privileged Time Series in Linear Dynamical Systems](). 
+This repository is the official implementation of [title](). 
 
 ### To-do list
-- [x] Create a requirements.txt file
-- [x] Add a figure to describe the problem setup 
-- [x] Add executable experiment for synthetic
-- [x] Add executable experiment + data (link or dataset) for FC
-- [x] Add code for ADNI
-- [x] Add code for MM
-- [x] Make repo public
+- [ ] Clean up code for distll-experiments?
 - [ ] Add arXiv link
 
 ![](images/illustration-crop.png)
