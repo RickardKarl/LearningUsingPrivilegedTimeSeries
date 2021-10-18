@@ -12,8 +12,7 @@ This repository is the official implementation of [title]().
 ![](images/illustration-crop.png)
 
 ### Abstract
-We study learning of predictive models of long-term outcomes that are given access to privileged information in the form of intermediate time series. These time series, available only in training samples, are observed chronologically between the baseline (time of prediction) and the outcome. We give an algorithm for this setting and prove that when the time series are drawn from a Gaussian-linear dynamical system, learning with privileged information is more efficient than learning without it. On synthetic data, we test the limits of our algorithm and theory,  both when our assumptions hold and when they are violated. On three diverse real-world datasets, we show that our approach is preferable to classical learning of predictive models in almost all settings, particularly when data is scarce.
-
+- [ ] Add abstract
 
 ## Requirements
 
