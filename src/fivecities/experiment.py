@@ -274,7 +274,7 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
 
                 elif model == 'Distill-Seq':
                     nbr_PTS = len(list(range(1, sequence_length, timestep)))
-                    color = 'c'
+                    color = 'purple'
                     label = model + f'_{nbr_PTS}PTS'
                     marker = '^'
 
