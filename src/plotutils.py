@@ -55,7 +55,7 @@ color_dict = {
     'Baseline' : 'blue',
     'LuPTS'    : 'red',
     'Stat-LuPTS': 'black',
-    'Distill-Seq': 'c',
+    'Distill-Seq': 'purple',
     'Distill-Concat': 'green',
     'SelectBest'      : 'orange',
     'RF' : 'green',
