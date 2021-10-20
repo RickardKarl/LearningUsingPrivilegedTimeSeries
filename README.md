@@ -1,12 +1,7 @@
 
 # PAPER TITLE
 
-
-
-This repository is the official implementation of [title](). 
-
 ### To-do list
-- [ ] Clean up code for distll-experiments?
 - [ ] Add arXiv link
 
 ![](images/illustration-crop.png)
