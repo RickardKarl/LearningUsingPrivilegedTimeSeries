@@ -1,8 +1,7 @@
 
 # Using Time-Series Privileged Information for Provably Efficient Learning of Prediction Models
 
-### To-do list
-- [ ] Add arXiv link
+### [Link to paper](https://arxiv.org/abs/2110.14993)
 
 ![](images/illustration-crop.png)
 
@@ -42,6 +41,3 @@ Code is found in */notebooks/ADNI.ipynb* and */src/adni/*
 #### Multiple myeloma progression modelling
 Code is found in */notebooks/mm-prfs.ipynb* and */notebooks/mm-tr.ipynb*
 
-## Bibtex entry for citation
-
-- [ ] To be filled out
