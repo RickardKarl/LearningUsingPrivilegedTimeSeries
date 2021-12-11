@@ -14,7 +14,7 @@ class LinearRegression(torch.nn.Module):
         y_hat = self.model(X)
         return y_hat
 
-class HayashiModel(base.Model): 
+class DistillationModel(base.Model): 
     
     def __init__(self, args={}, model_args={}, train_args={}, distill_seq=False): 
         self.args  = args
@@ -29,7 +29,7 @@ class HayashiModel(base.Model):
             self.teacher_model = lupts.LUPTS()
         self.student_model = None
 
-    def hayashi_loss(self, y_hat, y_hard, y_soft, lambda_): 
+    def distillation_loss(self, y_hat, y_hard, y_soft, lambda_): 
         y_hard = y_hard.squeeze()
         y_soft = y_soft.squeeze()
         y_hat  = y_hat.squeeze()
@@ -89,7 +89,7 @@ class HayashiModel(base.Model):
             y_hat = self.student_model(inputs)
 
             # get loss for the predicted output
-            loss = self.hayashi_loss(y_hat, Y_hard, Y_soft, lambda_)
+            loss = self.distillation_loss(y_hat, Y_hard, Y_soft, lambda_)
             # get gradients w.r.t to parameters
             loss.backward()
 

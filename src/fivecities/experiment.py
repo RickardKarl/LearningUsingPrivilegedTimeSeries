@@ -16,14 +16,14 @@ from sklearn.model_selection import train_test_split
 from itertools import product 
 
 # Import packages
-from src.model import baseline, lupts, hayashi
+from src.model import baseline, lupts, distillation
 from src.fivecities.reader import FiveCities
 from src.plotutils import set_mpl_default_settings, method_color, method_marker, score_label
 
 # Model
 model_dict_default = {
-    'Distill-Seq': hayashi.HayashiModel(distill_seq=True),
-    'Distill-Concat': hayashi.HayashiModel(),
+    'Distill-Seq': distillation.DistillationModel(distill_seq=True),
+    'Distill-Concat': distillation.DistillationModel(),
     'Baseline' : baseline.Baseline(),
     'LuPTS' : lupts.LUPTS()
 #                 'Stat-LuPTS': lupts.StatLUPTS()
@@ -104,7 +104,7 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
                 X_train, X_test = FiveCities.mean_imputation(X_train, X_test)
                 
                 for model in model_dict:
-                    # do a hp search over specified parameters (only supported for distillation models, e.g. Hayashi)
+                    # do a hp search over specified parameters (only supported for distillation models, e.g. Distillation)
                     if model in hp_args: 
                         # split up training set into train and validate
                         tr_idxs, val_idxs = train_test_split(np.arange(X_train.shape[0]),test_size=0.2,random_state=42)
@@ -119,10 +119,10 @@ def run_experiment(city : str, sequence_length : int, timestep_list : list, n_li
                         for elem in product(*param_lists): 
                             if model == 'Distill-Seq':     
                                 params = {k:elem[i] for i,k in enumerate(param_names)}
-                                hp_model = hayashi.HayashiModel(train_args=params, distill_seq=True)
+                                hp_model = distillation.DistillationModel(train_args=params, distill_seq=True)
                             elif model == 'Distill-Concat': 
                                 params = {k:elem[i] for i,k in enumerate(param_names)}
-                                hp_model = hayashi.HayashiModel(train_args=params)
+                                hp_model = distillation.DistillationModel(train_args=params)
                             else: 
                                 raise ValueError('No support for hp search over non distillation models.')
                             hp_model.fit(X_hp_train, y_hp_train)
@@ -225,7 +225,7 @@ def plot_results_PTS(output_dict, include_only_model = ['Baseline', 'LuPTS'], sa
                 continue 
             
             
-            #Somehow just choose the best Hayashi seq and concat respectively over timesteps
+            #Somehow just choose the best Distillation seq and concat respectively over timesteps
             #Basing this on the experiment with most available samples
             best_mean_score = -100000000
             time_to_keep = -1
