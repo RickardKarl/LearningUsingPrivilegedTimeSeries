@@ -96,7 +96,8 @@ def score_label(score_str):
 
 def set_mpl_default_settings():
     mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#999999', '#e41a1c', '#dede00']) # Set the default color cycle
-    mpl.rcParams['font.family'] = 'serif'
+    mpl.rcParams['pdf.fonttype'] = 42
+    mpl.rcParams['ps.fonttype'] = 42
     mpl.rcParams['font.size'] = 18
 
 
